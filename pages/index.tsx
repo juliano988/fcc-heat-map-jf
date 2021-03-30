@@ -3,6 +3,8 @@ import Head from 'next/head'
 import styles from '../styles/Home.module.css'
 import { DataRes } from '../customInterfaces';
 import * as d3 from "d3";
+import tippy from 'tippy.js';
+import 'tippy.js/dist/tippy.css';
 
 export default function Home(props: { data: DataRes }) {
 
@@ -51,7 +53,7 @@ function Graphic(props: { data: DataRes }) {
       .attr('width', leftLabelDivWidth)
       .append('g')
       .call(d3.axisLeft(d3.scaleLinear().domain([0, 11]).range([0, (svgHeight - scrollBarHeightOffset * 12 - svgHeight / 12)]))
-        .tickFormat((d) => { return new Date(null, d).toLocaleString(undefined, { month: 'long' }).replace(/./, (d) => d.toUpperCase()) })
+        .tickFormat((d: number) => { return new Date(null, d).toLocaleString(undefined, { month: 'long' }).replace(/./, (d) => d.toUpperCase()) })
         .tickSize(0))
       .attr('transform', 'translate(' + leftLabelDivWidth + ',' + svgHeight / 12 / 2 + ')')
 
@@ -86,6 +88,17 @@ function Graphic(props: { data: DataRes }) {
       .attr('width', blockWidth)
       .attr('y', (d) => (d.month - 1) * ((svgHeight / 12) - scrollBarHeightOffset))
       .attr('x', (d) => yearArr.indexOf(d.year) * blockWidth)
+      .attr('onmouseover', 'this.setAttribute("opacity","0.5")')
+      .attr('onmouseout', 'this.setAttribute("opacity","1")')
+
+    const tolltipy = graphicSvg.selectAll('rect').nodes().forEach(function (arg: HTMLElement, i, arr) {
+      tippy(arg, {
+        allowHTML: true,
+        content: props.data.monthlyVariance[i].year + ' - ' + new Date(null, (props.data.monthlyVariance[i].month - 1)).toLocaleString(undefined, { month: 'long' }).replace(/./, (d) => d.toUpperCase()) +'<br>'+
+                 (props.data.baseTemperature + props.data.monthlyVariance[i].variance).toFixed(1).toString() + 'ºC <br>' +
+                 props.data.monthlyVariance[i].variance.toFixed(1).toString() + 'ºC',
+      }).unmount();
+    })
 
     const xAxis = graphicSvg.append('g')
       .call(d3.axisBottom(d3.scaleTime().domain([new Date(minYear, null), new Date(maxYear, null)]).range([0, svgWidth]))
