@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import Head from 'next/head'
 import styles from '../styles/Home.module.css'
 import { DataRes } from '../customInterfaces';
@@ -28,6 +28,8 @@ export default function Home(props: { data: DataRes }) {
 
 function Graphic(props: { data: DataRes }) {
 
+  const [forceRender, setForceRender] = useState<number>(Math.random())
+
   const yAxisDivRef = useRef<HTMLDivElement>(null);
   const graphicDivRef = useRef<HTMLDivElement>(null);
   const legendDivRef = useRef<HTMLDivElement>(null);
@@ -42,7 +44,7 @@ function Graphic(props: { data: DataRes }) {
 
   const legendArrData = [12.8, 11.7, 10.6, 9.5, 8.3, 7.2, 6.1, 5.0, 3.9, 2.8];
 
-  useEffect(function () {
+  useLayoutEffect(function () {
 
     const svgWidth = yearArr.length * blockWidth;
     const svgHeight = graphicDivRef.current.clientHeight;
@@ -94,9 +96,9 @@ function Graphic(props: { data: DataRes }) {
     const tolltipy = graphicSvg.selectAll('rect').nodes().forEach(function (arg: HTMLElement, i, arr) {
       tippy(arg, {
         allowHTML: true,
-        content: props.data.monthlyVariance[i].year + ' - ' + new Date(null, (props.data.monthlyVariance[i].month - 1)).toLocaleString(undefined, { month: 'long' }).replace(/./, (d) => d.toUpperCase()) +'<br>'+
-                 (props.data.baseTemperature + props.data.monthlyVariance[i].variance).toFixed(1).toString() + 'ºC <br>' +
-                 props.data.monthlyVariance[i].variance.toFixed(1).toString() + 'ºC',
+        content: props.data.monthlyVariance[i].year + ' - ' + new Date(null, (props.data.monthlyVariance[i].month - 1)).toLocaleString(undefined, { month: 'long' }).replace(/./, (d) => d.toUpperCase()) + '<br>' +
+          (props.data.baseTemperature + props.data.monthlyVariance[i].variance).toFixed(1).toString() + 'ºC <br>' +
+          props.data.monthlyVariance[i].variance.toFixed(1).toString() + 'ºC',
       }).unmount();
     })
 
@@ -158,15 +160,16 @@ function Graphic(props: { data: DataRes }) {
       .selectAll('text')
       .style('font-size', 16)
 
-
-    console.log(props.data.monthlyVariance)
-
     return (function () {
       d3.select(yAxisDivRef.current).select('svg').remove();
       d3.select(graphicDivRef.current).select('svg').remove();
       d3.select(legendDivRef.current).select('svg').remove();
     })
 
+  }, [forceRender])
+
+  useEffect(function () {
+    window.addEventListener('resize', () => setForceRender(Math.random()))
   }, [])
 
   return (
